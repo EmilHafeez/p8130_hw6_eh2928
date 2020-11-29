@@ -20,9 +20,38 @@ scale_colour_discrete = scale_colour_viridis_d
 scale_fill_discrete = scale_fill_viridis_d
 ```
 
+First, let's read in the data.
+```{r}
+data_hosp = 
+  read.csv("./data/PatSatisfaction.csv")
+```
+
 # Problem 1 (15p)
 
 ## Problem 1.1.
+The correlation matrix refers to the array of numbers where \(r_{jk}\) is the pearson correlation coefficient between variables \(x_j\) and \(x_j\) such that 
+
+$$
+\mathbf{R}=\left(\begin{array}{ccccc}
+1 & r_{12} & r_{13} & \cdots & r_{1 p} \\
+r_{21} & 1 & r_{23} & \cdots & r_{2 p} \\
+r_{31} & r_{32} & 1 & \cdots & r_{3 p} \\
+\vdots & \vdots & \vdots & \ddots & \vdots \\
+r_{p 1} & r_{p 2} & r_{p 3} & \cdots & 1
+\end{array}\right)
+$$
+
+As such, the correlation coefficient for the all variables "patient's satisfaction score" (the outcome), "age", "severity of illness", and "anxiety level" is as follows. 
+
+```{r}
+# Correlation matrix for all variables
+cor(data_hosp) %>% 
+  knitr::kable(
+              align = "cccc", 
+              digits = 3)
+```
+
+
 
 ## Problem 1.2.
 
