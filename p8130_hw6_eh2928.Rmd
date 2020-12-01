@@ -324,3 +324,36 @@ cor(estradiol_df) %>%
 We can see from this correlation matrix that while ethnicity has some correlation with BMI, it is not a strong correlation, and so we may not anticipate encountering collinearity problems. 
 
 Let's explore the relationship between BMI and serum estradiol by utilizing MLRs stratified on ethnicity.
+
+```{r}
+fit_estradiol_white_mlr = lm(estradiol ~ bmi + age + numchild + agemenar, data = estradiol_white_df)
+summary(fit_estradiol_white_mlr)
+```
+COMMENT
+```{r}
+fit_estradiol_aa_mlr = lm(estradiol ~ bmi + age + numchild + agemenar, data = estradiol_aa_df)
+summary(fit_estradiol_aa_mlr)
+```
+COMMENT
+
+COMMENT GENERALLY
+
+
+GRAPH IF YOU WANT
+
+```{r include = F}
+predicted_white_pred_mlr_df = data.frame(estradiol_white_predicted_mlr = predict(fit_estradiol_white_mlr, data = estradiol_white_df), bmi=estradiol_white_df$bmi)
+
+predicted_aa_pred_mlr_df = data.frame(estradiol_aa_predicted_mlr = predict(fit_estradiol_aa_mlr, data = estradiol_aa_df), bmi=estradiol_aa_df$bmi)
+```
+```{r}
+estradiol_df %>% 
+  ggplot(aes(x = bmi, y = estradiol)) + 
+  geom_point(color = 'blue', alpha = 0.2) + 
+  geom_line(aes(x = bmi, y = estradiol_white_predicted_mlr), color='red', data = predicted_white_pred_mlr_df) +
+  geom_line( aes(x = bmi, y = estradiol_aa_predicted_mlr), color='black', data = predicted_aa_pred_mlr_df) +
+  labs(title = 
+         "Scatterplot Serum Estradiol against BMI with Overlaid MLRs (Caucasian in Red)",
+       x = "BMI", 
+       y="Estradiol")
+```
