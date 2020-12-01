@@ -242,7 +242,7 @@ summary(fit_mlr_estradiol)
 ```
 Now, we can see a different relationship between BMI and serum estradiol. Previously, we saw a statistically insignificant decrease that when BMI increases by one unit, there was to be an associated reduction in serum estradiol levels of 0.4529 units. Now, when we adjust for other predictors (namely ethnicity, age, the number of children the woman has had, and their age at menarche), when BMI increases by one unit we anticipate a decrease in serum estradiol of 0.1066 units; this is also a statistically insignificant relationship.
 
-Regarding other predictors: we show a statistically significant relationship between ethnic status (Black versus white) and serum estradiol, where we anticipate someone of Black ethnicity will have 16.0579 serum estradiol units lower than someone of white ethnicity (controlling for other predictors). 
+Regarding other predictors: we show a statistically significant relationship between ethnic status (African American versus Caucasian) and serum estradiol, where we anticipate someone of African American ethnicity will have 16.0579 serum estradiol units lower than someone of Caucasian ethnicity (controlling for other predictors). 
 
 We see a one unit increase in age (years) associated with a 0.5180 increase in serum estradiol (statistically insignificant). We also see that when the number of children the woman has had increases by one, we associate a 0.4906 units decrease in serum estradiol (also statistically insignificant). Lastly, when the age of menarche increases by one year, we see an associated increase in serum estradiol of 0.1073 units.
 
@@ -258,6 +258,66 @@ tidy(fit_mlr_estradiol) %>%
 ## Problem 2.3.
 ## Problem 2.3.a.
 
+```{r}
+#Examining a stratified analysis, we could fit separate regressions for each of the 2 ethnicities in the dataset
+
+#first, is ethnicity associated with the outcome?
+fit_ethnic_estradiol = lm(formula = estradiol ~ factor(ethnic), data = estradiol_df)
+summary(fit_ethnic_estradiol)
+```
+There is a clear relationship between ethnicity and serum estradiol. Now, we examine whether the relationship between BMI and serum estradiol varies by ethnicity by stratifying our previous regression by ethnicity status. 
+
+```{r include = F}
+estradiol_white_df = estradiol_df %>% 
+  filter(ethnic == 0)
+
+estradiol_aa_df = estradiol_df %>% 
+  filter(ethnic == 1)
+```
+
+Now, we examine whether the relationship between BMI and serum estradiol differs by the levels of ethnicity variable. 
+```{r}
+fit_estradiol_inter = lm(estradiol ~ bmi * ethnic, data = estradiol_df)
+summary(fit_estradiol_inter)
+```
+Here, we see a significant interaction; the relationship between BMI and serum estradiol seems to differ by levels of ethnicity, such that status in the African American ethnic group is associated with a decrease in serum estradiol. We investigate further using a stratified analysis.
+
+```{r}
+fit_estradiol_white = lm(estradiol ~ bmi, data = estradiol_white_df)
+summary(fit_estradiol_white)
+```
+We see a low, negative association between BMI and serum estradiol levels, where each increase in BMI unit is associated with a 2.235 decrease in serum estradiol levels, though this relationship is not statistically significant.
+
+```{r}
+fit_estradiol_aa = lm(estradiol ~ bmi, data = estradiol_aa_df)
+summary(fit_estradiol_aa)
+```
+We see a low, positive association between BMI and serum estradiol levels, where each increase in BMI unit is associated with a 0.3327 increase in serum estradiol levels, though this relationship is not statistically significant.
+
+There is not strong evidence to support the relationship between BMI and serum estradiol varies for African American and Caucasian women when only examining these three variables. 
+
+```{r include = F}
+predicted_white_pred_df = data.frame(estradiol_white_predicted = predict(fit_estradiol_white, data = estradiol_white_df), bmi=estradiol_white_df$bmi)
+predicted_aa_pred_df = data.frame(estradiol_aa_predicted = predict(fit_estradiol_aa, data = estradiol_aa_df), bmi=estradiol_aa_df$bmi)
+```
+We can graph these relationships; let's take a look at serum estradiol as a function of BMI, with separate regressions for Caucasians (in red) and African Americans (in Black).
+```{r}
+estradiol_df %>% 
+  ggplot(aes(x = bmi, y = estradiol)) + 
+  geom_point(color = 'blue', alpha = 0.2) + 
+  geom_line(aes(x = bmi, y = estradiol_white_predicted), color='red', data = predicted_white_pred_df) +
+  geom_line( aes(x = bmi, y = estradiol_aa_predicted), color='black', data = predicted_aa_pred_df) +
+  labs(title = 
+         "Scatterplot Serum Estradiol against BMI with Overlaid MLRs (Caucasian in Red)",
+       x = "BMI", 
+       y="Estradiol")
+```
 ## Problem 2.3.b.
+
+take additional steps to quantify the relationship between
+BMI and serum estradiol by ethnicity. Comment on your findings. (2.5p)
+
+Let's do the same thing as the previous component, but use an MLR and control for other variables, and then stratify. 
+
 
 
