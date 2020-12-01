@@ -56,9 +56,9 @@ cor(pat_sat) %>%
               digits = 3)
 ```
 
-In regards to these values, the predictors each show moderate to strong negative correlation with the outcome variable. As such, it appears that an increase in age, severity of illness, or anxiety level is correlated with a decrease in satisfaction. We may also make a note that there is correlation between the predictors, a multicollinearity concern. 
+In regards to these values, the predictors each show moderate to strong negative correlation with the outcome variable. As such, it appears that an increase in age, severity of illness, or anxiety level is correlated with a decrease in satisfaction. We may also make a note that there is correlation between the predictors, a multicollinearity concern. We will explore this further.  
 
-## Problem 1.2. THIS NEEDS REVISITING
+## Problem 1.2. 
 Fit a MLR with all 3 predictors and test whether at least one is significant.
 
 ```{r MLR patsat}
@@ -232,8 +232,6 @@ From this SLR output, we can see that there is a negative, small in magnitude, a
 
 ## Problem 2.2.
 
-How does the relationship between BMI and serum estradiol change after controlling for all the other risk factors listed above? Provide the summary regression output and comment on the relationships observed for each of the predictors. (5p)
-
 ```{r}
 fit_mlr_estradiol = lm(estradiol ~ bmi + ethnic + age + numchild + agemenar, data = estradiol_df)
 
@@ -246,6 +244,9 @@ Regarding other predictors: we show a statistically significant relationship bet
 We see a one unit increase in age (years) associated with a 0.5180 increase in serum estradiol (statistically insignificant). We also see that when the number of children the woman has had increases by one, we associate a 0.4906 units decrease in serum estradiol (also statistically insignificant). Lastly, when the age of menarche increases by one year, we see an associated increase in serum estradiol of 0.1073 units.
 
 See these relationships printed more neatly below.
+
+We may note that when we fit with collinear variables, we inflate the standard errors for each collinear variable; this consequently decreases the test statistic, which further clouds the significant level reached. Given the current model results, we may do well to examine collinearity and examine other fits, especially since ethnicity had such a strong relationship with the outcome variable in the SLR performed.
+
 ```{r}
 tidy(fit_mlr_estradiol) %>% 
   knitr::kable(
@@ -312,11 +313,14 @@ estradiol_df %>%
        y="Estradiol")
 ```
 ## Problem 2.3.b.
+Let's examine the collinearity.
 
-take additional steps to quantify the relationship between
-BMI and serum estradiol by ethnicity. Comment on your findings. (2.5p)
+```{r}
+cor(estradiol_df) %>% 
+  knitr::kable(
+              align = "cccc", 
+              digits = 3)
+```
+We can see from this correlation matrix that while ethnicity has some correlation with BMI, it is not a strong correlation, and so we may not anticipate encountering collinearity problems. 
 
-Let's do the same thing as the previous component, but use an MLR and control for other variables, and then stratify. 
-
-
-
+Let's explore the relationship between BMI and serum estradiol by utilizing MLRs stratified on ethnicity.
