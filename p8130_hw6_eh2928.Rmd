@@ -215,15 +215,28 @@ Generate a scatter plot with the overlaid regression line. Comment. (2.5p)
 estradiol_df %>% 
   ggplot(aes(x = bmi, y = estradiol)) + 
   geom_point(color = 'blue') + 
-  geom_line(alpha = .1) + 
+  geom_smooth(method = 'lm', color = 'red', se = F) +
   labs(title = 
          "Scatterplot Patient Satisfaction Outcomes against Age with Overlaid MLR",
        x = "BMI", 
        y = "Serum Estradiol Value")
 ```
+From this plot, we can see that there is perhaps a small or unclear relationship between the predictor, BMI, and the outcome, estradiol. There are a few large outliers potentially obscuring the regression, however. 
+
 ## Problem 2.1.b.
+```{r}
+fit_estradiol = lm(estradiol ~ bmi, data = estradiol_df)
+summary(fit_estradiol)
+```
+
+From this SLR output, we can see that there is a negative, small in magnitude, and statistically insignificant relationship between BMI and serum estradiol level. This is to say, if BMI increases, there is a minor decrease in serum estradiol levels (though this relationship is, again, not significant).
 
 ## Problem 2.2.
+
+How does the relationship between BMI and serum estradiol change after controlling for all the other risk factors listed above? Provide the summary regression output and comment on the relationships observed for each of the predictors. (5p)
+
+
+
 
 ## Problem 2.3.
 ## Problem 2.3.a.
