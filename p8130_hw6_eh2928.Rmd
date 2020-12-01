@@ -115,24 +115,26 @@ Seeing as \(t_{n-2, 1-(\alpha/2)}\) = 2.015368, in our context, the 95% confiden
 
 ## Problem 1.4.
 
-The 95% confidence interval for a new patient's satisfaction when they have age = 35, severity of illness = 42, and anxiety = 2.1 is given by: 
+As mentioned in Live Lecture 12/1/2020, we are examining the the 95% interval for a specific new patient's satisfaction when that patient has age = 35, severity of illness = 42, and anxiety = 2.1. As such, we are calculating the prediction interval given by
+
+The 95% prediction interval for Anne's freshman GPA is calculated as below.
 
 $$
 \begin{array}{c}
-\widehat{\beta_{0}}+\widehat{\beta_{1}}+\widehat{\beta_{2}}+\widehat{\beta_{3}} X_{h} \pm t_{n-2,1-\alpha / 2} \cdot \operatorname{se}\left(\widehat{\beta_{0}}+\widehat{\beta_{1}} X_{h}\right) \\
- \operatorname{se}\left(\widehat{\beta_{0}}+\widehat{\beta_{1}} X_{h}\right)=\sqrt{M S E\left\{\frac{1}{n}+\left[\left(X_{h}-\bar{X}\right)^{2} / \sum_{i=1}^{n}\left(X_{i}-\bar{X}\right)^{2}\right]\right\}}
+\widehat{\beta_{0}}+\widehat{\beta_{1}} X_{h} \pm t_{n-2,1-\alpha / 2} \cdot \operatorname{se}\left(\widehat{\beta_{0}}+\widehat{\beta_{1}} X_{h}\right) \\
+\operatorname{se}\left(\widehat{\beta_{0}}+\widehat{\beta_{1}} X_{h}\right)=\sqrt{M S E\left\{\frac{1}{n}+\left[\left(X_{h}-\bar{X}\right)^{2} / \sum_{i=1}^{n}\left(X_{i}-\bar{X}\right)^{2}\right] + 1\right\}}
 \end{array}
 $$
+
+In context, this means that with 95% confidence we predict the true value of the specific new patient's satisfaction when they have age = 35, severity of illness = 42, and anxiety = 2.1 to be between 58.10921 and 101.24 units (58.10921, 101.24). Notice how wide a prediction interval is, versus a comparable confidence interval for the mean value of any new patient's satisfaction who meet those criteria, because the prediction interval focuses on one specific new value of \(Y_h\), and since we do not calculate an expected mean the errors do not reduce to 0, and so the SE formula for prediction includes a \(+1\) in the denominator, widening the interval overall.
 
 ```{r}
 fit_patsat = lm(satisfaction ~ age + severity + anxiety, data = pat_sat)
 
 data_to_predict_from = data.frame(age = 28, severity = 42, anxiety = 2.1)
 
-predict(fit_patsat, data_to_predict_from, interval = "confidence")
+predict(fit_patsat, data_to_predict_from, interval = "prediction")
 ```
-
-In context, this means that with 95% confidence we estimate the mean value of a new patient's satisfaction when they have age = 35, severity of illness = 42, and anxiety = 2.1 is given by between 72.39005 and 86.95914 units (72.39005, 86.95914).
 
 
 ## Problem 1.5.a.
@@ -181,7 +183,7 @@ The \(R^2\) and adjusted \(R^2\) in the former, larger model are respectively 0.
 
 The \(R^2\) and adjusted \(R^2\) in the latter, smaller model where we do not include the anxiety variable are respectively 0.6549559 and 0.6389073.
 
-Therefore, the action we took (dropping the anxiety variable) produces a marginally lower \(R^2\) and adjusted \(R^2\) than previously.
+Therefore, the action we took (dropping the anxiety variable) produces a marginally lower \(R^2\) and adjusted \(R^2\) than previously. Said otherwise, the larger model including the anxiety variable produces a very marginal increase in the \(R^2\) and adjusted \(R^2\) such that it is not strong evidence to retain the factor either.
 
 
 ```{r}
@@ -191,9 +193,6 @@ lm(satisfaction ~ age + severity + anxiety, data = pat_sat) %>%
 lm(satisfaction ~ age + severity, data = pat_sat) %>% 
   glance()
 ```
-
-
-
 
 
 # Problem 2 (15p)
