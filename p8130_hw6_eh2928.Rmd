@@ -7,10 +7,13 @@ output: pdf_document
 
 ```{r setup, include=FALSE}
 library(tidyverse)
+library(faraway)
+library(broom)
+library(dplyr)
 
 knitr::opts_chunk$set(echo = TRUE)
 
-theme_set(theme_minimal() + theme(legend.position = "bottom")) #setup and establish the colors schemes for plits
+theme_set(theme_minimal() + theme(legend.position = "bottom")) #setup and establish the colors schemes for plots
 options(
   ggplot2.continuous.colour = "viridis",
   ggplot2.continuous.fill = "viridis"
@@ -22,8 +25,10 @@ scale_fill_discrete = scale_fill_viridis_d
 
 First, let's read in the data.
 ```{r}
-data_hosp = 
-  read.csv("./data/PatSatisfaction.csv")
+pat_sat = 
+  read.csv("./data/PatSatisfaction.csv") %>% 
+  janitor::clean_names() %>% 
+  rename(satisfaction = safisfaction)
 ```
 
 # Problem 1 (15p)
@@ -45,67 +50,177 @@ As such, the correlation coefficient for the all variables "patient's satisfacti
 
 ```{r}
 # Correlation matrix for all variables
-cor(data_hosp) %>% 
+cor(pat_sat) %>% 
   knitr::kable(
               align = "cccc", 
               digits = 3)
 ```
 
+In regards to these values, the predictors each show moderate to strong negative correlation with the outcome variable. As such, it appears that an increase in age, severity of illness, or anxiety level is correlated with a decrease in satisfaction. We may also make a note that there is correlation between the predictors, a multicollinearity concern. 
 
+## Problem 1.2. THIS NEEDS REVISITING
+Fit a MLR with all 3 predictors and test whether at least one is significant.
 
-## Problem 1.2.
+```{r MLR patsat}
+fit_patsat = lm(satisfaction ~ age + severity + anxiety, data = pat_sat)
+anova(fit_patsat)
+```
+Note that in this code, the tests for each term are conditioned for everything else above them in the output.
+
+Hypotheses:
+\(H_0: \beta_1 = \beta_2 = \beta_3\)
+
+\(H_A:\) at least one \(\beta\) is not zero. 
+
+Test statistic and decision rule is given by:
+
+$$
+\begin{array}{l}
+F=\frac{M S R}{M S E}>F_{1-\alpha ; p, n-p-1}, \text { reject } H_{0} \\
+F=\frac{M S R}{M S E} \leq F_{1-\alpha ; p, n-p-1}, \text { fail to reject } H_{0}
+\end{array}
+$$
+
+In our case, the test statistic for all of the predictors is \(F = 3.5997\), and the critical value is given by `qf(0.99, 3, 46-3)`, \(F_{1-\alpha ; p, n-p-1} = 4.27265\) 
+
+Therefore, we fail to reject the null hypothesis and conclude that at least one of the predictors in the model is not significant in association with outcome variable (satisfaction).
 
 ## Problem 1.3.
 
+Show the regression results for all estimated slope coefficients with 95% CIs.
+
+```{r}
+summary(fit_patsat)
+
+predicted_df = data.frame(patsat_pred = predict(fit_patsat, data = pat_sat), age=pat_sat$age)
+
+pat_sat %>% 
+  ggplot(aes(x = age, y = satisfaction)) + 
+  geom_point(color = 'blue') + 
+  geom_line(color='red', data = predicted_df, se=TRUE, aes(x = age, y = patsat_pred)) +
+  labs(title = 
+         "Scatterplot Patient Satisfaction Outcomes against Age with Overlaid MLR",
+       x = "Age", 
+       y="Satisfaction")
+```
+Here we can see that the coefficient for the "severity of illness" variable is equal to -0.4420, implying that a one unit increase in the severity of illness variable is associated with a 0.4420 decrease in patient satisfaction rating (the outcome). Another way to think of this is that as a patient's severity of illness rating increases by 1, there is an associated decrease of 0.4420 unit of patient satisfaction as an outcome. 
+
+The 95% confidence interval for true slope of the "severity of illness" coefficient \(\beta_2\) is given by \(\widehat{\beta_2} \pm t_{n-2, 1-(\alpha/2)} \cdot se(\widehat{\beta_2}) \)where \(se(\widehat{\beta_2}) = \sqrt{MSE / \Sigma_{i=1}^n}(X_i - \overline{X})^2 \). 
+
+```{r}
+tidy(fit_patsat)
+qt(0.975,44)
+```
+Seeing as \(t_{n-2, 1-(\alpha/2)}\) = 2.015368, in our context, the 95% confidence interval for the true slope is equal to \(-0.4420043 \pm 2.015368 \cdot 0.4919657 = (-1.433496, 0.5494876)\). As such, we are 95% confident that as patient severity of illness increases by one unit, the true value of the associated change in satisfaction is between (-1.433496, 0.5494876) points. This overlaps the null value of 0, implying that there may be no true association between patient severity of illness and satisfaction.
+
 ## Problem 1.4.
 
-## Problem 1.5.
+The 95% confidence interval for a new patient's satisfaction when they have age = 35, severity of illness = 42, and anxiety = 2.1 is given by: 
+
+$$
+\begin{array}{c}
+\widehat{\beta_{0}}+\widehat{\beta_{1}}+\widehat{\beta_{2}}+\widehat{\beta_{3}} X_{h} \pm t_{n-2,1-\alpha / 2} \cdot \operatorname{se}\left(\widehat{\beta_{0}}+\widehat{\beta_{1}} X_{h}\right) \\
+ \operatorname{se}\left(\widehat{\beta_{0}}+\widehat{\beta_{1}} X_{h}\right)=\sqrt{M S E\left\{\frac{1}{n}+\left[\left(X_{h}-\bar{X}\right)^{2} / \sum_{i=1}^{n}\left(X_{i}-\bar{X}\right)^{2}\right]\right\}}
+\end{array}
+$$
+
+```{r}
+fit_patsat = lm(satisfaction ~ age + severity + anxiety, data = pat_sat)
+
+data_to_predict_from = data.frame(age = 28, severity = 42, anxiety = 2.1)
+
+predict(fit_patsat, data_to_predict_from, interval = "confidence")
+```
+
+In context, this means that with 95% confidence we estimate the mean value of a new patient's satisfaction when they have age = 35, severity of illness = 42, and anxiety = 2.1 is given by between 72.39005 and 86.95914 units (72.39005, 86.95914).
 
 
+## Problem 1.5.a.
+First, we fit the two nested models. 
+```{r}
+small_patsat_fit = lm(satisfaction ~ age + severity, data = pat_sat)
+large_patsat_fit = lm(satisfaction ~ age + severity + anxiety, data = pat_sat)
+```
+Note that we are comparing the two models here: 
+
+Model 1, without the anxiety variable: \(Y_i = \beta_0+\beta_1X_{i1}+\beta_2X_{i2}\)
+
+Model 2, with the anxiety variable: \(Y_i = \beta_0+\beta_1X_{i1}+\beta_2X_{i2}+\beta_3X_{i3}\)
+
+Note that Model 1 is a subset of Model 2.
+
+The null hypothesis is to retain the the smaller model, and the alternate hypothesis is to utilize the larger model. This is also to say, \(H_0: \beta_3 = 0\), and \(H_A: \beta_3 \neq 0\)
+
+The test statistic F is given by the following,
+
+\(F=\frac{\left(S S R_{L}-S S R_{S}\right) /\left(d f_{L}-d f_{S}\right)}{\frac{S S E_{L}}{d f_{L}}} \sim F_{d f_{L}-d f_{S}, d f_{L}}\)
+
+where \(df_S = n-p_s -1, df_L = n-p_L-1\). 
+
+This can also be written as 
+
+\(F=\frac{\left(S S E_{S}-S S E_{L}\right) /\left(d f_{S}-d f_{L}\right)}{\frac{S S E_{L}}{d f_{L}}}\).
+
+The decision rule is given by
+$$
+\begin{array}{l}
+F=\frac{M S R}{M S E}>F_{1-\alpha ; df_L - df_S, df_L}, \text { reject } H_{0} \\
+F=\frac{M S R}{M S E} \leq F_{1-\alpha ; df_L - df_S, df_L}, \text { fail to reject } H_{0}
+\end{array}
+$$
+
+```{r}
+anova(small_patsat_fit, large_patsat_fit) %>% 
+  tidy() 
+```
+Given F = 3.599735, we fail to reject the null hypothesis and conclude that we retain the smaller model, and so do not include the anxiety variable in our MLR. We discard it. 
+
+## Problem 1.5.b.
+
+The \(R^2\) and adjusted \(R^2\) in the former, larger model are respectively 0.6821943 and 0.6594939
+
+The \(R^2\) and adjusted \(R^2\) in the latter, smaller model where we do not include the anxiety variable are respectively 0.6549559 and 0.6389073.
+
+Therefore, the action we took (dropping the anxiety variable) produces a marginally lower \(R^2\) and adjusted \(R^2\) than previously.
 
 
+```{r}
+lm(satisfaction ~ age + severity + anxiety, data = pat_sat) %>% 
+  glance()
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+lm(satisfaction ~ age + severity, data = pat_sat) %>% 
+  glance()
+```
 
 
 
 
 
 # Problem 2 (15p)
+First let's read in the data.
 
+```{r}
+estradiol_df = 
+  read.csv("./data/ESTRADL.csv") %>% 
+  janitor::clean_names() %>% 
+  rename(estradiol = estradl) %>% 
+  rename(age = entage)
+```
 ## Problem 2.1.
 ## Problem 2.1.a.
 
+Generate a scatter plot with the overlaid regression line. Comment. (2.5p)
+```{r}
+# Scatter plot with regression line overlaid
+estradiol_df %>% 
+  ggplot(aes(x = bmi, y = estradiol)) + 
+  geom_point(color = 'blue') + 
+  geom_line(alpha = .1) + 
+  labs(title = 
+         "Scatterplot Patient Satisfaction Outcomes against Age with Overlaid MLR",
+       x = "BMI", 
+       y = "Serum Estradiol Value")
+```
 ## Problem 2.1.b.
 
 ## Problem 2.2.
