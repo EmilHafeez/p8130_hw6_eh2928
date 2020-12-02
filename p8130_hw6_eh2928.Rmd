@@ -83,7 +83,7 @@ $$
 
 In our case, the test statistic for all of the predictors is \(F = 3.5997\), and the critical value is given by `qf(0.95, 3, 46-3-1)`, \(F_{1-\alpha ; p, n-p-1} = 2.827049\) 
 
-Therefore, we reject the null hypothesis and conclude that at least one of the predictors in the model is significant in association with outcome variable (satisfaction).
+Therefore, at the alpha = 0.05 we reject the null hypothesis and conclude that at least one of the predictors (beta's) in the model is significant in association with outcome variable (satisfaction).
 
 ## Problem 1.3.
 
@@ -103,19 +103,20 @@ pat_sat %>%
        x = "Age", 
        y="Satisfaction")
 ```
-Here we can see that the coefficient for the "severity of illness" variable is equal to -0.4420, implying that a one unit increase in the severity of illness variable is associated with a 0.4420 decrease in patient satisfaction rating (the outcome). Another way to think of this is that as a patient's severity of illness rating increases by 1, there is an associated decrease of 0.4420 unit of patient satisfaction as an outcome. 
+The 95% confidence intervals for each of the coefficients from the regression are as follows. 
+```{r}
+confint(fit_patsat, level = 0.95)
+```
+
+From the regression output, we can see that the coefficient for the "severity of illness" variable is equal to -0.4420, implying that a one unit increase in the severity of illness variable is associated with a 0.4420 decrease in patient satisfaction rating (the outcome). 
 
 The 95% confidence interval for true slope of the "severity of illness" coefficient \(\beta_2\) is given by \(\widehat{\beta_2} \pm t_{n-2, 1-(\alpha/2)} \cdot se(\widehat{\beta_2}) \)where \(se(\widehat{\beta_2}) = \sqrt{MSE / \Sigma_{i=1}^n}(X_i - \overline{X})^2 \). 
 
-```{r}
-tidy(fit_patsat)
-qt(0.975,44)
-```
-Seeing as \(t_{n-2, 1-(\alpha/2)}\) = 2.015368, in our context, the 95% confidence interval for the true slope is equal to \(-0.4420043 \pm 2.015368 \cdot 0.4919657 = (-1.433496, 0.5494876)\). As such, we are 95% confident that as patient severity of illness increases by one unit, the true value of the associated change in satisfaction is between (-1.433496, 0.5494876) points. This overlaps the null value of 0, implying that there may be no true association between patient severity of illness and satisfaction.
+Seeing as \(t_{n-2, 1-(\alpha/2)}\) = 2.015368, in our context, the 95% confidence interval for the true slope is equal to \(-0.4420043 \pm 2.015368 \cdot 0.4919657 = (-1.433496, 0.5494876)\). As such, we are 95% confident that as patient severity of illness increases by one unit, the true value of the associated change in satisfaction is between (-1.434831, 0.5508228) points. This overlaps the null value of 0, implying that there may be no true association between patient severity of illness and satisfaction.
 
 ## Problem 1.4.
 
-As mentioned in Live Lecture 12/1/2020, we are examining the the 95% interval for a specific new patient's satisfaction when that patient has age = 35, severity of illness = 42, and anxiety = 2.1. As such, we are calculating the prediction interval given by
+We are examining the the 95% interval for a specific new patient's satisfaction when that patient has age = 35, severity of illness = 42, and anxiety = 2.1. As such, we are calculating the prediction interval given by
 
 The 95% prediction interval for Anne's freshman GPA is calculated as below.
 
@@ -126,12 +127,12 @@ $$
 \end{array}
 $$
 
-In context, this means that with 95% confidence we predict the true value of the specific new patient's satisfaction when they have age = 35, severity of illness = 42, and anxiety = 2.1 to be between 58.10921 and 101.24 units (58.10921, 101.24). Notice how wide a prediction interval is, versus a comparable confidence interval for the mean value of any new patient's satisfaction who meet those criteria, because the prediction interval focuses on one specific new value of \(Y_h\), and since we do not calculate an expected mean the errors do not reduce to 0, and so the SE formula for prediction includes a \(+1\) in the denominator, widening the interval overall.
+In context, this means that with 95% confidence we predict the true value of the specific new patient's satisfaction when they have age = 35, severity of illness = 42, and anxiety = 2.1 to be between 50.06237 and 93.30426 units (50.06237, 93.30426). Notice how wide a prediction interval is, versus a comparable confidence interval for the mean value of any new patient's satisfaction who meet those criteria, because the prediction interval focuses on one specific new value of \(Y_h\), and since we do not calculate an expected mean the errors do not reduce to 0, and so the SE formula for prediction includes a \(+1\) in the denominator, widening the interval overall.
 
 ```{r}
 fit_patsat = lm(satisfaction ~ age + severity + anxiety, data = pat_sat)
 
-data_to_predict_from = data.frame(age = 28, severity = 42, anxiety = 2.1)
+data_to_predict_from = data.frame(age = 35, severity = 42, anxiety = 2.1)
 
 predict(fit_patsat, data_to_predict_from, interval = "prediction")
 ```
@@ -151,7 +152,7 @@ Model 2, with the anxiety variable: \(Y_i = \beta_0+\beta_1X_{i1}+\beta_2X_{i2}+
 
 Note that Model 1 is a subset of Model 2.
 
-The null hypothesis is to retain the the smaller model, and the alternate hypothesis is to utilize the larger model. This is also to say, \(H_0: \beta_3 = 0\), and \(H_A: \beta_3 \neq 0\)
+The null hypothesis is to retain the the smaller model, and the alternate hypothesis is to utilize the larger model. This is also to say, \(H_0: \beta_3 = 0\), and \(H_A: \beta_3 \neq 0\).
 
 The test statistic F is given by the following,
 
@@ -175,7 +176,7 @@ $$
 anova(small_patsat_fit, large_patsat_fit) %>% 
   tidy() 
 ```
-Given F = 3.599735, we fail to reject the null hypothesis and conclude that we retain the smaller model, and so do not include the anxiety variable in our MLR. We discard it. 
+Given F = 3.599735 and p = 0.06467813, we fail to reject the null hypothesis and conclude that we retain the smaller model, and so do not include the anxiety variable in our MLR. We discard it. 
 
 ## Problem 1.5.b.
 
@@ -183,8 +184,7 @@ The \(R^2\) and adjusted \(R^2\) in the former, larger model are respectively 0.
 
 The \(R^2\) and adjusted \(R^2\) in the latter, smaller model where we do not include the anxiety variable are respectively 0.6549559 and 0.6389073.
 
-Therefore, the action we took (dropping the anxiety variable) produces a marginally lower \(R^2\) and adjusted \(R^2\) than previously. Said otherwise, the larger model including the anxiety variable produces a very marginal increase in the \(R^2\) and adjusted \(R^2\) such that it is not strong evidence to retain the factor either.
-
+Therefore, the action we took (dropping the anxiety variable) produces a marginally lower \(R^2\) and adjusted \(R^2\) than previously. Said otherwise, the larger model including the anxiety variable produces a very marginal increase in the \(R^2\) and adjusted \(R^2\) such that it is not strong evidence to retain the factor either. We can use the 5% change heuristic as presented in lecture to interpret this change as very small. 
 
 ```{r}
 lm(satisfaction ~ age + severity + anxiety, data = pat_sat) %>% 
@@ -210,7 +210,7 @@ estradiol_df =
 
 First, let's build the scatterplot and overlay the SLR line.
 
-```{r}
+```{r include = F}
 # Scatter plot with regression line overlaid
 estradiol_df %>% 
   ggplot(aes(x = bmi, y = estradiol)) + 
@@ -221,45 +221,57 @@ estradiol_df %>%
        x = "BMI", 
        y = "Serum Estradiol Value")
 ```
-From this plot, it appears there is perhaps a small or unclear relationship between the predictor, BMI, and the outcome, estradiol. There are a few large outliers potentially obscuring the regression, however, and we have not examined other influences.
+From this plot, it appears there is perhaps a small negative relationship between the predictor, BMI, and the outcome, estradiol. There are a few large outliers, however, and we have not examined other influences.
 
 ## Problem 2.1.b.
+
+Now, let's look at the SLR output itself.
 ```{r}
 fit_estradiol = lm(estradiol ~ bmi, data = estradiol_df)
 summary(fit_estradiol)
 ```
 
-From the SLR output, we can see that there is a negative, small in magnitude, and statistically insignificant relationship between BMI and serum estradiol level. This is to say, if BMI increases by, there is an associated minor decrease in serum estradiol levels (0.4529) (though this relationship is, again, not significant).
+From the SLR output, we can see that there is a negative, small in magnitude, and statistically insignificant relationship (p = 0.21) between BMI and serum estradiol level. This is to say, if BMI increases by 1 unit, there is an associated minor decrease in serum estradiol levels (by 0.4529), though this relationship is, again, not significant.
 
 ## Problem 2.2.
-Now, let's fit an MLR using the other predictors.
+Now, let's fit an MLR using the other predictors. How does the BMI-estradiol relationship change after adjusting for the other factors?
 
 ```{r}
 fit_mlr_estradiol = lm(estradiol ~ bmi + ethnic + age + numchild + agemenar, data = estradiol_df)
 
 summary(fit_mlr_estradiol)
 ```
-Now, we can see a different relationship between BMI and serum estradiol. Previously, we saw a statistically insignificant decrease that when BMI increases by one unit, there was to be an associated reduction in serum estradiol levels of 0.4529 units. 
+Well, we can see a different relationship between BMI and serum estradiol. Previously, we saw a statistically insignificant decrease that when BMI increases by one unit, there was to be an associated reduction in serum estradiol levels of 0.4529 units. Now instead, when we adjust for other predictors (namely ethnicity, age, the number of children the woman has had, and their age at menarche), when BMI increases by one unit we anticipate a decrease in serum estradiol of 0.1066 units; a lower decrease than previously anticipated. However, this is also a statistically insignificant relationship.
 
-Now instead, when we adjust for other predictors (namely ethnicity, age, the number of children the woman has had, and their age at menarche), when BMI increases by one unit we anticipate a decrease in serum estradiol of 0.1066 units; this is also a statistically insignificant relationship.
+Let's look at the other predictors as well. 
 
-Regarding other predictors: we show a statistically significant relationship between ethnic status (African American versus Caucasian) and serum estradiol, where we anticipate someone of African American ethnicity will have 16.0579 serum estradiol units lower than someone of Caucasian ethnicity (controlling for other predictors). This is notable.
+Regarding other predictors: we show a statistically significant relationship between ethnic status (African American versus Caucasian) and serum estradiol, where we anticipate someone of African American ethnicity will have 16.0579 serum estradiol units lower than someone of Caucasian ethnicity (controlling for other predictors). This is notable and the only statistically significant predictor.
 
-We see a one unit increase in age (years) associated with a 0.5180 increase in serum estradiol (statistically insignificant). We also see that when the number of children the woman has had increases by one, we associate a 0.4906 units decrease in serum estradiol (also statistically insignificant). Lastly, when the age of menarche increases by one year, we see an associated increase in serum estradiol of 0.1073 units.
+We see a one unit increase in age (years) associated with a 0.5180 increase in serum estradiol (statistically insignificant), when adjusting for other predictors. We also see that when the number of children the woman has had increases by one, we associate a 0.4906 units decrease in serum estradiol (also statistically insignificant) (when adjusting for other predictors). Lastly, when the age of menarche increases by one year, we see an associated increase in serum estradiol of 0.1073 units (when adjusting for other predictors).
 
 ## Problem 2.3.
 ## Problem 2.3.a.
-Now, let's focus back on the relationship primarily between BMI and serum estradiol. We saw a significant interaction for ethnicitym indicating that the relationship between BMI and serum estradiol may differ for African American and Caucasion women. There is evidence for this, though not conclusive. Let's investigate further.
+Now, let's focus back on just the relationship primarily between BMI and serum estradiol. 
 
-We may note that when we fit with collinear variables, we inflate the standard errors for each collinear variable; this consequently decreases the test statistic, which further clouds the significant level reached. Since ethnicity had such a strong relationship with the outcome variable in the SLR performed prior, let's investigate by stratifying on ethnicity.
+We saw a significant interaction for ethnicity, indicating that the relationship between BMI and serum estradiol may differ for African American and Caucasion women. There is evidence for this, though not conclusive. Let's investigate further.
 
+First, is ethnicity associated with the outcome?
 ```{r}
 #first, is ethnicity associated with the outcome?
 fit_ethnic_estradiol = lm(formula = estradiol ~ factor(ethnic), data = estradiol_df)
 summary(fit_ethnic_estradiol)
 ```
 
-There is a clear relationship between ethnicity and serum estradiol. Now, we examine whether the relationship between BMI and serum estradiol varies by ethnicity by stratifying our previous regression by ethnicity status. 
+Now, we examine whether the relationship between BMI and serum estradiol differs by the levels of ethnicity variable. 
+
+```{r}
+fit_estradiol_inter = lm(estradiol ~ bmi * ethnic, data = estradiol_df)
+summary(fit_estradiol_inter)
+```
+Here, we see a significant interaction; the relationship between BMI and serum estradiol seems to differ by levels of ethnicity, such that status in the African American ethnic group is associated with a decrease in serum estradiol. We investigate further using a stratified analysis.
+
+Now, we examine whether the relationship between BMI and serum estradiol varies by ethnicity by stratifying our previous regression by ethnicity status. We may note that when we fit with collinear variables, we inflate the standard errors for each collinear variable; this consequently decreases the test statistic, which further clouds the significant level reached. Since ethnicity had such a strong relationship with the outcome variable in the SLR performed prior, let's investigate by stratifying on ethnicity using an SLR otherwise.
+
 
 ```{r include = F}
 estradiol_white_df = estradiol_df %>% 
@@ -269,32 +281,27 @@ estradiol_aa_df = estradiol_df %>%
   filter(ethnic == 1)
 ```
 
-Now, we examine whether the relationship between BMI and serum estradiol differs by the levels of ethnicity variable. 
-```{r}
-fit_estradiol_inter = lm(estradiol ~ bmi * ethnic, data = estradiol_df)
-summary(fit_estradiol_inter)
-```
-Here, we see a significant interaction; the relationship between BMI and serum estradiol seems to differ by levels of ethnicity, such that status in the African American ethnic group is associated with a decrease in serum estradiol. We investigate further using a stratified analysis.
-
 ```{r}
 fit_estradiol_white = lm(estradiol ~ bmi, data = estradiol_white_df)
 summary(fit_estradiol_white)
 ```
-We see a low, negative association between BMI and serum estradiol levels, where each increase in BMI unit is associated with a 2.235 decrease in serum estradiol levels, though this relationship is not statistically significant.
+We see a low, negative association between BMI and serum estradiol levels among Caucasian women, where each increase in BMI unit is associated with a 2.235 decrease in serum estradiol level, though this relationship is not statistically significant.
 
 ```{r}
 fit_estradiol_aa = lm(estradiol ~ bmi, data = estradiol_aa_df)
 summary(fit_estradiol_aa)
 ```
-We see a low, positive association between BMI and serum estradiol levels, where each increase in BMI unit is associated with a 0.3327 increase in serum estradiol levels, though this relationship is not statistically significant.
+We see a low, positive association between BMI and serum estradiol levels among African American women, where each increase in BMI unit is associated with a 0.3327 increase in serum estradiol levels; this is in contrast to the decrease among Caucasian women, though this relationship is not statistically significant.
 
-There is not strong evidence to support the relationship between BMI and serum estradiol varies for African American and Caucasian women when only examining these three variables. 
+There is not strong evidence to support the relationship between BMI and serum estradiol varies for African American and Caucasian women when only examining these three predictors; while we do observe different values for the relationship between BMI and serum estradiol among Caucasian women (-2.235)  and African American women (+0.3327), these coefficients are not significant. 
 
 ```{r include = F}
 predicted_white_pred_df = data.frame(estradiol_white_predicted = predict(fit_estradiol_white, data = estradiol_white_df), bmi=estradiol_white_df$bmi)
 predicted_aa_pred_df = data.frame(estradiol_aa_predicted = predict(fit_estradiol_aa, data = estradiol_aa_df), bmi=estradiol_aa_df$bmi)
 ```
-We can graph these relationships; let's take a look at serum estradiol as a function of BMI, with separate regressions for Caucasians (in red) and African Americans (in Black).
+
+
+Of course, we can graph these relationships; let's take a look at serum estradiol as a function of BMI, with separate regressions for Caucasians (in red) and African Americans (in Black).
 ```{r}
 estradiol_df %>% 
   ggplot(aes(x = bmi, y = estradiol)) + 
@@ -306,11 +313,10 @@ estradiol_df %>%
        x = "BMI", 
        y="Estradiol")
 ```
-Notice that when we plot the relationship between BMI and serum estradiol stratified by ethnicity, we can see that these regression lines cross, indicative of an important interaction. We saw previously that the interaction term is significant. 
-
+Notice that when we plot the relationship between BMI and serum estradiol stratified by ethnicity, we can see that these regression lines cross, indicative of an important interaction. However, we saw previously that the interaction term is significant, but when we stratify we do not see a significant association between BMI and serum estradiol among Caucasian or African American women.  
 
 ## Problem 2.3.b.
-Let's examine the collinearity.
+As noted earlier, we could quantify this relationship further but may be concerned about collinearity when fitting an MLR. Let's examine the collinearity.
 
 ```{r}
 cor(estradiol_df) %>% 
@@ -318,39 +324,52 @@ cor(estradiol_df) %>%
               align = "cccc", 
               digits = 3)
 ```
-We can see from this correlation matrix that while ethnicity has some correlation with BMI, it is not a strong correlation, and so we may not anticipate encountering collinearity problems. 
+We can see from this correlation matrix that while ethnicity has some correlation with BMI, the other predictors do not tend have strong relationships with each other. Thus, let's proceed with fitting MLRs.
 
-Let's explore the relationship between BMI and serum estradiol by utilizing MLRs stratified on ethnicity.
+We explore the relationship between BMI and serum estradiol by utilizing MLRs stratified on ethnicity.
 
 ```{r}
 fit_estradiol_white_mlr = lm(estradiol ~ bmi + age + numchild + agemenar, data = estradiol_white_df)
 summary(fit_estradiol_white_mlr)
 ```
-COMMENT
+```{r include = F}
+confint(fit_estradiol_white_mlr)
+```
+
+We can see that the association between BMI and serum estradiol among Caucasian women, when adjusting for the other predictors, is estimated at a 2.856 decrease in anticipated serum estradiol per increase in BMI unit. However, this relationship is not significant. We obtain the 95% confidence interval for this relationship as (-5.90195911, 0.1899121), when adjusting for other factors. This value overlaps the null value of 0.
+
 ```{r}
 fit_estradiol_aa_mlr = lm(estradiol ~ bmi + age + numchild + agemenar, data = estradiol_aa_df)
 summary(fit_estradiol_aa_mlr)
 ```
-COMMENT
+We can see that the association between BMI and serum estradiol among African American women, when adjusting for the other predictors, is estimated at a 2.856 decrease in anticipated serum estradiol per increase in BMI unit. However, this relationship is not significant. We obtain the 95% confidence interval for this relationship as (-0.1616919, 0.8351005), when adjusting for other factors. This value overlaps the null value of 0.
 
-COMMENT GENERALLY
+```{r include = F}
+confint(fit_estradiol_aa_mlr)
+```
 
-
-GRAPH IF YOU WANT
+We can also graph these stratified MLRs, as we did previously for the SLRs.
 
 ```{r include = F}
 predicted_white_pred_mlr_df = data.frame(estradiol_white_predicted_mlr = predict(fit_estradiol_white_mlr, data = estradiol_white_df), bmi=estradiol_white_df$bmi)
 
 predicted_aa_pred_mlr_df = data.frame(estradiol_aa_predicted_mlr = predict(fit_estradiol_aa_mlr, data = estradiol_aa_df), bmi=estradiol_aa_df$bmi)
 ```
-```{r}
+```{r include = F}
 estradiol_df %>% 
   ggplot(aes(x = bmi, y = estradiol)) + 
   geom_point(color = 'blue', alpha = 0.2) + 
-  geom_line(aes(x = bmi, y = estradiol_white_predicted_mlr), color='red', data = predicted_white_pred_mlr_df) +
-  geom_line( aes(x = bmi, y = estradiol_aa_predicted_mlr), color='black', data = predicted_aa_pred_mlr_df) +
+  geom_line(aes(x = bmi, y = estradiol_white_predicted_mlr), color = 'red', data = predicted_white_pred_mlr_df) +
+  geom_line( aes(x = bmi, y = estradiol_aa_predicted_mlr), color = 'black', data = predicted_aa_pred_mlr_df) +
   labs(title = 
          "Scatterplot Serum Estradiol against BMI with Overlaid MLRs (Caucasian in Red)",
        x = "BMI", 
        y="Estradiol")
 ```
+In conclusion, when we stratify by ethnicity, both in an SLR setting and when adjusting for other covariates, we do not see significant relationship between BMI and serum estradiol. 
+
+```{r}
+fit_mlr_estradiol_tester = lm(estradiol ~ bmi*ethnic + ethnic + age + numchild + agemenar, data = estradiol_df)
+summary(fit_mlr_estradiol_tester)
+```
+
