@@ -81,9 +81,9 @@ F=\frac{M S R}{M S E} \leq F_{1-\alpha ; p, n-p-1}, \text { fail to reject } H_{
 \end{array}
 $$
 
-In our case, the test statistic for all of the predictors is \(F = 3.5997\), and the critical value is given by `qf(0.99, 3, 46-3)`, \(F_{1-\alpha ; p, n-p-1} = 4.27265\) 
+In our case, the test statistic for all of the predictors is \(F = 3.5997\), and the critical value is given by `qf(0.95, 3, 46-3-1)`, \(F_{1-\alpha ; p, n-p-1} = 2.827049\) 
 
-Therefore, we fail to reject the null hypothesis and conclude that at least one of the predictors in the model is not significant in association with outcome variable (satisfaction).
+Therefore, we reject the null hypothesis and conclude that at least one of the predictors in the model is significant in association with outcome variable (satisfaction).
 
 ## Problem 1.3.
 
@@ -208,7 +208,8 @@ estradiol_df =
 ## Problem 2.1.
 ## Problem 2.1.a.
 
-Generate a scatter plot with the overlaid regression line. Comment. (2.5p)
+First, let's build the scatterplot and overlay the SLR line.
+
 ```{r}
 # Scatter plot with regression line overlaid
 estradiol_df %>% 
@@ -220,7 +221,7 @@ estradiol_df %>%
        x = "BMI", 
        y = "Serum Estradiol Value")
 ```
-From this plot, we can see that there is perhaps a small or unclear relationship between the predictor, BMI, and the outcome, estradiol. There are a few large outliers potentially obscuring the regression, however. 
+From this plot, it appears there is perhaps a small or unclear relationship between the predictor, BMI, and the outcome, estradiol. There are a few large outliers potentially obscuring the regression, however, and we have not examined other influences.
 
 ## Problem 2.1.b.
 ```{r}
@@ -228,43 +229,36 @@ fit_estradiol = lm(estradiol ~ bmi, data = estradiol_df)
 summary(fit_estradiol)
 ```
 
-From this SLR output, we can see that there is a negative, small in magnitude, and statistically insignificant relationship between BMI and serum estradiol level. This is to say, if BMI increases by, there is a minor decrease in serum estradiol levels (0.4529) (though this relationship is, again, not significant).
+From the SLR output, we can see that there is a negative, small in magnitude, and statistically insignificant relationship between BMI and serum estradiol level. This is to say, if BMI increases by, there is an associated minor decrease in serum estradiol levels (0.4529) (though this relationship is, again, not significant).
 
 ## Problem 2.2.
+Now, let's fit an MLR using the other predictors.
 
 ```{r}
 fit_mlr_estradiol = lm(estradiol ~ bmi + ethnic + age + numchild + agemenar, data = estradiol_df)
 
 summary(fit_mlr_estradiol)
 ```
-Now, we can see a different relationship between BMI and serum estradiol. Previously, we saw a statistically insignificant decrease that when BMI increases by one unit, there was to be an associated reduction in serum estradiol levels of 0.4529 units. Now, when we adjust for other predictors (namely ethnicity, age, the number of children the woman has had, and their age at menarche), when BMI increases by one unit we anticipate a decrease in serum estradiol of 0.1066 units; this is also a statistically insignificant relationship.
+Now, we can see a different relationship between BMI and serum estradiol. Previously, we saw a statistically insignificant decrease that when BMI increases by one unit, there was to be an associated reduction in serum estradiol levels of 0.4529 units. 
 
-Regarding other predictors: we show a statistically significant relationship between ethnic status (African American versus Caucasian) and serum estradiol, where we anticipate someone of African American ethnicity will have 16.0579 serum estradiol units lower than someone of Caucasian ethnicity (controlling for other predictors). 
+Now instead, when we adjust for other predictors (namely ethnicity, age, the number of children the woman has had, and their age at menarche), when BMI increases by one unit we anticipate a decrease in serum estradiol of 0.1066 units; this is also a statistically insignificant relationship.
+
+Regarding other predictors: we show a statistically significant relationship between ethnic status (African American versus Caucasian) and serum estradiol, where we anticipate someone of African American ethnicity will have 16.0579 serum estradiol units lower than someone of Caucasian ethnicity (controlling for other predictors). This is notable.
 
 We see a one unit increase in age (years) associated with a 0.5180 increase in serum estradiol (statistically insignificant). We also see that when the number of children the woman has had increases by one, we associate a 0.4906 units decrease in serum estradiol (also statistically insignificant). Lastly, when the age of menarche increases by one year, we see an associated increase in serum estradiol of 0.1073 units.
 
-See these relationships printed more neatly below.
-
-We may note that when we fit with collinear variables, we inflate the standard errors for each collinear variable; this consequently decreases the test statistic, which further clouds the significant level reached. Given the current model results, we may do well to examine collinearity and examine other fits, especially since ethnicity had such a strong relationship with the outcome variable in the SLR performed.
-
-```{r}
-tidy(fit_mlr_estradiol) %>% 
-  knitr::kable(
-              col.names =
-                c("Term Name", "Coeff Estimate", "Std Err", "Test Statistic", "p Value"),
-              align = "ccccc", 
-              digits = 3)
-```
 ## Problem 2.3.
 ## Problem 2.3.a.
+Now, let's focus back on the relationship primarily between BMI and serum estradiol. We saw a significant interaction for ethnicitym indicating that the relationship between BMI and serum estradiol may differ for African American and Caucasion women. There is evidence for this, though not conclusive. Let's investigate further.
+
+We may note that when we fit with collinear variables, we inflate the standard errors for each collinear variable; this consequently decreases the test statistic, which further clouds the significant level reached. Since ethnicity had such a strong relationship with the outcome variable in the SLR performed prior, let's investigate by stratifying on ethnicity.
 
 ```{r}
-#Examining a stratified analysis, we could fit separate regressions for each of the 2 ethnicities in the dataset
-
 #first, is ethnicity associated with the outcome?
 fit_ethnic_estradiol = lm(formula = estradiol ~ factor(ethnic), data = estradiol_df)
 summary(fit_ethnic_estradiol)
 ```
+
 There is a clear relationship between ethnicity and serum estradiol. Now, we examine whether the relationship between BMI and serum estradiol varies by ethnicity by stratifying our previous regression by ethnicity status. 
 
 ```{r include = F}
@@ -308,10 +302,13 @@ estradiol_df %>%
   geom_line(aes(x = bmi, y = estradiol_white_predicted), color='red', data = predicted_white_pred_df) +
   geom_line( aes(x = bmi, y = estradiol_aa_predicted), color='black', data = predicted_aa_pred_df) +
   labs(title = 
-         "Scatterplot Serum Estradiol against BMI with Overlaid MLRs (Caucasian in Red)",
+         "Scatterplot Serum Estradiol against BMI with Overlaid MLRs",
        x = "BMI", 
        y="Estradiol")
 ```
+Notice that when we plot the relationship between BMI and serum estradiol stratified by ethnicity, we can see that these regression lines cross, indicative of an important interaction. We saw previously that the interaction term is significant. 
+
+
 ## Problem 2.3.b.
 Let's examine the collinearity.
 
