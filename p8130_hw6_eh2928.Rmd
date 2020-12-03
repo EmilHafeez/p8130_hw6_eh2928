@@ -59,16 +59,12 @@ cor(pat_sat) %>%
 In regards to these values, the predictors each show moderate to strong negative correlation with the outcome variable. As such, it appears that an increase in age, severity of illness, or anxiety level is correlated with a decrease in satisfaction. We may also make a note that there is correlation between the predictors, a multicollinearity concern. We will explore this further.  
 
 ## Problem 1.2. 
-Fit a MLR with all 3 predictors and test whether at least one is significant.
+Fit a MLR with all 3 predictors and test whether at least one is significant (using a global F-test).
 
-```{r MLR patsat}
-fit_patsat = lm(satisfaction ~ age + severity + anxiety, data = pat_sat)
-anova(fit_patsat)
-```
 Note that in this code, the tests for each term are conditioned for everything else above them in the output.
 
 Hypotheses:
-\(H_0: \beta_1 = \beta_2 = \beta_3\)
+\(H_0: \beta_{age} = \beta_{severity} = \beta_{anxiety}\)
 
 \(H_A:\) at least one \(\beta\) is not zero. 
 
@@ -76,10 +72,20 @@ Test statistic and decision rule is given by:
 
 $$
 \begin{array}{l}
-F=\frac{M S R}{M S E}>F_{1-\alpha ; p, n-p-1}, \text { reject } H_{0} \\
-F=\frac{M S R}{M S E} \leq F_{1-\alpha ; p, n-p-1}, \text { fail to reject } H_{0}
+F=\frac{M S R}{M S E}>F_{1-\alpha ; df_N, {df_F}}, \text { reject } H_{0} \\
+F=\frac{M S R}{M S E} \leq F_{1-\alpha ; df_N, {df_F}}, \text { fail to reject } H_{0}
 \end{array}
 $$
+
+Now, let's calculate it
+```{r MLR patsat}
+fit_patsat = lm(satisfaction ~ age + severity + anxiety, data = pat_sat)
+anova(fit_patsat)
+#MSE is 101.2
+sum((fit_patsat$fitted.values - mean(pat_sat$satisfaction))^2)/3
+#MSR is ~3040
+```
+\(F = \frac{3040.155}{101.2} \approx 30.04\)
 
 In our case, the test statistic for all of the predictors is \(F = 3.5997\), and the critical value is given by `qf(0.95, 3, 46-3-1)`, \(F_{1-\alpha ; p, n-p-1} = 2.827049\) 
 
