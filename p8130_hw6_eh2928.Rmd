@@ -372,10 +372,9 @@ estradiol_df %>%
        x = "BMI", 
        y="Estradiol")
 ```
-In conclusion, when we stratify by ethnicity, both in an SLR setting and when adjusting for other covariates, we do not see significant relationship between BMI and serum estradiol. 
+In conclusion, when we stratify by ethnicity, both in an SLR setting and when adjusting for other covariates, we do not see significant relationship between BMI and serum estradiol. However, there is a slightly negative association between BMI and serum estradiol in the Caucasian ethnic group as compared with the African American group; but this relationship is not significant.
 
 ```{r}
 fit_mlr_estradiol_tester = lm(estradiol ~ bmi*ethnic + ethnic + age + numchild + agemenar, data = estradiol_df)
 summary(fit_mlr_estradiol_tester)
 ```
-
